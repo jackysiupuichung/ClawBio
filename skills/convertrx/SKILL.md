@@ -1,69 +1,41 @@
 ---
-name: your-skill-name
-description: >-
-  One-line description of what this skill does. Be specific; this is how users
-  and AI agents discover your skill.
+name: pharmacogenomics-kcl
+description: XXX
 license: MIT
 metadata:
-  version: "0.1.0"
-  author: Your Name
-  domain: genomics
+  version: 0.1.0
+  author: KCL SGDP workshop group
   tags:
-    - tag1
-    - tag2
-    - tag3
-  inputs:
-    - name: input_file
-      type: file
-      format:
-        - vcf
-        - csv
-        - tsv
-        - txt
-      description: Primary input data file
-      required: true
-  outputs:
-    - name: report
-      type: file
-      format:
-        - md
-      description: Analysis report
-    - name: result
-      type: file
-      format:
-        - json
-      description: Machine-readable results
-  dependencies:
-    python: ">=3.10"
-    packages:
-      - pandas>=2.0
-  demo_data:
-    - path: demo_input.txt
-      description: Synthetic test data
-  endpoints:
-    cli: python skills/your-skill-name/your_skill.py --input {input_file} --output {output_dir}
+  - gwas
+  - wgs
   openclaw:
     requires:
       bins:
-        - python3
+      - python3
     always: false
-    emoji: "🦖"
+    emoji: 📊
     homepage: https://github.com/ClawBio/ClawBio
     os:
-      - darwin
-      - linux
+    - darwin
+    - linux
     install:
-      - kind: pip
-        package: biopython
+    - kind: conda
+      package: plink2
+      bins:
+      - plink2
+    - kind: conda
+      package: regenie
+      bins:
+      - regenie
     trigger_keywords:
-      - keyword that routes to this skill
-      - another trigger phrase
-      - a third trigger phrase
+    - WGS
 ---
 
-# 🦖 Skill Name
+# 📊 GWAS Pipeline
 
-You are **[Skill Name]**, a specialised ClawBio agent for [domain]. Your role is to [core function in one sentence].
+You are **pharmacogenomics-kcl**, a specialised ClawBio agent for a pharmacogenomic profiling. Your role is to automate best-practice QC and prediction of their pharmacogenomic metaboliser status from genotype files to publication-ready results.
+
+When a person takes a drug, the drug will be metabolised. This process is controlled by certain genes.
 
 ## Trigger
 
@@ -86,17 +58,14 @@ If two skills sound similar, the trigger is where you disambiguate.
 
 ## Why This Exists
 
-What goes wrong without this skill? What gap does it fill?
-
-- **Without it**: Users must [painful manual process]
-- **With it**: [Automated outcome in seconds/minutes]
-- **Why ClawBio**: [What makes this better than ChatGPT guessing; grounded in real databases/algorithms]
+- **Without it**: Researchers must work manually, writing hundreds of lines of bash, managing dozens of parameters, and applying field-standard QC thresholds by hand
+- **With it**: A single command runs the full analysis and prediction.
 
 ## Core Capabilities
 
-1. **Capability 1**: Description
-2. **Capability 2**: Description
-3. **Capability 3**: Description
+1. **Run pharmgx-reporter**: Generate a personalised drug–gene interaction report from consumer genetic data
+2. **Run clinpgx**: Look up gene-drug interactions, clinical annotations, CPIC guidelines, FDA drug labels, and allele definitions from the ClinPGx REST API (https://api.clinpgx.org/).
+3. **Unified reporting**: Merge, deduplicate, and rank results across all sources using a tabular format
 
 ## Scope
 
@@ -107,23 +76,14 @@ If your skill is trying to do two unrelated jobs, split it into two skills.
 
 | Format | Extension | Required Fields | Example |
 |--------|-----------|-----------------|---------|
-| Format 1 | `.ext` | field1, field2 | `demo_data.ext` |
-| Format 2 | `.ext` | field1 | `sample.ext` |
+| 23andMe raw data | `.txt`, `.txt.gz` | rsid, chromosome, position, genotype | `demo_patient.txt` |
+| AncestryDNA raw data | `.txt` | rsid, chromosome, position, allele1, allele2 | — |
 
 ## Workflow
 
-When the user asks for [task type]:
-
-1. **Validate**: Check input format and required fields
-2. **Process**: [Core computation; be specific about algorithm/database used]
-3. **Generate**: [Output generation; what gets written where]
-4. **Report**: Write `report.md` with findings, figures, and reproducibility bundle
-
-**Freedom level guidance:**
-- For fragile operations (database lookups, variant annotation, clinical thresholds):
-  be prescriptive. Every step must be exact.
-- For interpretive operations (report narrative, literature synthesis, strategy):
-  give guidance but leave room for the model to reason and compose.
+1. **Run pharmgx-reporter**: Read raw genetic data, auto-detect format (23andMe vs AncestryDNA)
+2. **Run clinpgx**: Look up gene-drug interactions, clinical annotations, CPIC guidelines, FDA drug labels, and allele definitions from the ClinPGx REST API.
+3. **Report**: Generate `report.csv` with gene profile table, drug summary, and clinical alerts
 
 ## CLI Reference
 
