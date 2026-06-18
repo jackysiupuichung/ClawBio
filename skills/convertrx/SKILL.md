@@ -65,7 +65,8 @@ If two skills sound similar, the trigger is where you disambiguate.
 
 1. **Run pharmgx-reporter**: Generate a personalised drug–gene interaction report from consumer genetic data
 2. **Run clinpgx**: Look up gene-drug interactions, clinical annotations, CPIC guidelines, FDA drug labels, and allele definitions from the ClinPGx REST API (https://api.clinpgx.org/).
-3. **Unified reporting**: Merge, deduplicate, and rank results across all sources using a tabular format
+3. **Check CYP450 drug–drug interactions**: Run `check_interactions.py` against the bundled `cyp450_drug_roles.csv` (545 drug/enzyme/role rows across 8 CYP450 enzymes) to find shared-enzyme collisions in a medication list — flagging substrate/inhibitor/inducer combinations that raise or lower drug exposure.
+4. **Unified reporting**: Merge, deduplicate, and rank results across all sources using a tabular format
 
 ## Scope
 
@@ -78,26 +79,31 @@ If your skill is trying to do two unrelated jobs, split it into two skills.
 |--------|-----------|-----------------|---------|
 | 23andMe raw data | `.txt`, `.txt.gz` | rsid, chromosome, position, genotype | `demo_patient.txt` |
 | AncestryDNA raw data | `.txt` | rsid, chromosome, position, allele1, allele2 | — |
+| Medication list | CLI args / `--interactive` | drug names (generic or brand) | `warfarin amiodarone clopidogrel` |
 
 ## Workflow
 
-1. **Run pharmgx-reporter**: Read raw genetic data, auto-detect format (23andMe vs AncestryDNA)
+1. **Run pharmgx-reporter**: Read raw genetic data, auto-detect format (23andMe vs AncestryDNA), call star alleles and metaboliser phenotypes
 2. **Run clinpgx**: Look up gene-drug interactions, clinical annotations, CPIC guidelines, FDA drug labels, and allele definitions from the ClinPGx REST API.
-3. **Report**: Generate `report.csv` with gene profile table, drug summary, and clinical alerts
+3. **Check drug–drug interactions**: Run `check_interactions.py` on the patient's medication list against `cyp450_drug_roles.csv` to detect shared-enzyme collisions (≥2 drugs converging on one CYP450 enzyme) and interpret the substrate/inhibitor/inducer risk.
+4. **Report**: Generate `report.csv` with gene profile table, drug summary, drug–drug interaction alerts, and clinical alerts
 
 ## CLI Reference
 
 ```bash
-# Standard usage
-python skills/your-skill-name/your_skill.py \
-  --input <input_file> --output <report_dir>
+# Step 1 — metaboliser phenotypes from genotype data
+python skills/pharmgx-reporter/pharmgx_reporter.py \
+  --input <23andMe_or_AncestryDNA_file> --output <report_dir>
 
-# Demo mode (synthetic data, no user files needed)
-python skills/your-skill-name/your_skill.py --demo --output /tmp/demo
+# Step 2 — gene/drug evidence from the ClinPGx API
+python skills/clinpgx/clinpgx.py \
+  --genes "CYP2D6,CYP2C19" --drugs "warfarin,clopidogrel" --output <report_dir>
 
-# Via ClawBio runner
-python clawbio.py run <alias> --input <file> --output <dir>
-python clawbio.py run <alias> --demo
+# Step 3 — CYP450 shared-enzyme drug–drug interaction check
+python skills/convertrx/check_interactions.py warfarin amiodarone clopidogrel
+python skills/convertrx/check_interactions.py --interactive
+# (CSV defaults to the bundled skills/convertrx/cyp450_drug_roles.csv;
+#  override with --csv <path> if needed)
 ```
 
 ## Demo
