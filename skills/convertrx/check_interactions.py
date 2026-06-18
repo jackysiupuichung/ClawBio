@@ -18,9 +18,12 @@ import argparse
 import csv
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 
-DEFAULT_CSV_PATH = "cyp450_drug_roles.csv"
+# Anchor the bundled roles table to this script's directory so the default
+# resolves no matter what working directory the skill is invoked from.
+DEFAULT_CSV_PATH = str(Path(__file__).resolve().parent / "cyp450_drug_roles.csv")
 
 
 def load_roles(csv_path):
